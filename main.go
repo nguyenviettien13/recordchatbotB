@@ -7,23 +7,54 @@ import (
 	"log"
 	_ "github.com/go-sql-driver/mysql"
 	"strconv"
+	"github.com/kelseyhightower/envconfig"
 )
 
-const (
-	PAGEACCESSTOKEN = ""
-	VERIFYTOKEN     = ""
-	PORT = 2102
+type MyConfigure struct {
+	PAGEACCESSTOKEN string
+	VERIFYTOKEN     string
+	PORT 			int
 
-	DB_NAME="recordchatbotB"
-	DB_USER=""
-	DB_PASS="1"
-	MaxSample=180
-	Maxinning=5
-)
+}
+var bot MyConfigure
+
+type MyDatabase struct {
+	NAME string
+	USER string
+	PASS string
+}
+var mydatabase MyDatabase
+
+type Constant struct {
+	MAXSAMPLE int
+	MAXINNING int
+}
+var constant Constant
 
 var db *sql.DB
 type Record struct {}
 
+func Init()  {
+	err := envconfig.Process("BOT", &bot)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	log.Println(bot.PAGEACCESSTOKEN,bot.VERIFYTOKEN,bot.PORT)
+
+	err1 := envconfig.Process("DB", &mydatabase)
+	if err1 != nil {
+		log.Fatal(err.Error())
+	}
+	log.Println(mydatabase.NAME,mydatabase.USER,mydatabase.PASS)
+
+	err2 := envconfig.Process("CONSTANT", &constant)
+	if err2 != nil {
+		log.Fatal(err.Error())
+	}
+	fmt.Println(constant.MAXINNING,constant.MAXSAMPLE)
+
+
+}
 func ( record Record ) HandleMessage( bot *fbbot.Bot , msg *fbbot.Message ){
 	if IsNewUser(db,msg.Sender.ID) {
 		greeting := "Xin chào! "+msg.Sender.FirstName()+" Chúng tôi đang thực hiện một dự án thu thập dữ liệu ghi âm giọng nói và rất vui khi nhận được sự hợp tác của bạn"
@@ -75,8 +106,8 @@ func ( record Record ) HandleMessage( bot *fbbot.Bot , msg *fbbot.Message ){
 		state := GetCurrentState(db,msg.Sender.ID)
 		smlid := state+1
 		inning := GetCurrentInning(db,msg.Sender.ID)
-		if inning<= Maxinning {
-			if smlid <= MaxSample{
+		if inning<= constant.MAXINNING {
+			if smlid <= constant.MAXSAMPLE{
 				sample := GetSample(db,smlid)
 				m := fbbot.NewTextMessage(sample)
 				bot.Send(msg.Sender,m)
@@ -109,8 +140,8 @@ func (r Record) HandlePostback(bot *fbbot.Bot, pbk *fbbot.Postback)  {
 		state := GetCurrentState(db,pbk.Sender.ID)
 		smlid :=state+1
 		ig    := GetCurrentInning(db,pbk.Sender.ID)
-		if ig<= Maxinning {
-			if smlid <MaxSample {
+		if ig<= constant.MAXINNING {
+			if smlid <constant.MAXSAMPLE {
 				_, err := db.Query("UPDATE Outputs SET State = ? WHERE FbId=? AND SampleId=? AND Inning=?",true,pbk.Sender.ID,smlid,ig)
 				if err != nil {
 					log.Println("error when update state of outputs")
@@ -125,7 +156,7 @@ func (r Record) HandlePostback(bot *fbbot.Bot, pbk *fbbot.Postback)  {
 				m := fbbot.NewTextMessage(sample)
 				bot.Send(pbk.Sender,m)
 
-			}else if smlid == MaxSample {
+			}else if smlid == constant.MAXSAMPLE {
 				_, err := db.Query("UPDATE Outputs SET State=? WHERE FbId=? AND SampleId=? AND Inning=?",true,pbk.Sender.ID,smlid,ig)
 				if err != nil {
 					log.Println("error when update state of outputs")
@@ -140,7 +171,7 @@ func (r Record) HandlePostback(bot *fbbot.Bot, pbk *fbbot.Postback)  {
 				m := fbbot.NewTextMessage(announce)
 				bot.Send(pbk.Sender,m)
 				ig:=GetCurrentInning(db,pbk.Sender.ID)
-				if ig>Maxinning{
+				if ig>constant.MAXINNING{
 					sample := "Ban đã hoàn thành quá trình thu âm, xin cảm ơn bạn"
 					m := fbbot.NewTextMessage(sample)
 					bot.Send(pbk.Sender,m)
@@ -162,7 +193,7 @@ func (r Record) HandlePostback(bot *fbbot.Bot, pbk *fbbot.Postback)  {
 		state := GetCurrentState(db,pbk.Sender.ID)
 		sampleid := state+1
 		ig    := GetCurrentInning(db,pbk.Sender.ID)
-		if ig<=Maxinning {
+		if ig<=constant.MAXINNING {
 			sample :=GetSample(db,sampleid)
 			m:= fbbot.NewTextMessage(sample)
 			bot.Send(pbk.Sender,m)
@@ -180,8 +211,8 @@ func (r Record) HandlePostback(bot *fbbot.Bot, pbk *fbbot.Postback)  {
 		id := GetCurrentState(db,pbk.Sender.ID)
 		sml:= id+1
 		ig := GetCurrentInning(db,pbk.Sender.ID)
-		if ig<= Maxinning {
-			if sml <= MaxSample {
+		if ig<= constant.MAXINNING {
+			if sml <= constant.MAXSAMPLE {
 				sample := GetSample(db,sml)
 				m := fbbot.NewTextMessage(sample)
 				bot.Send(pbk.Sender,m)
@@ -199,8 +230,8 @@ func (r Record) HandlePostback(bot *fbbot.Bot, pbk *fbbot.Postback)  {
 		id := GetCurrentState(db,pbk.Sender.ID)
 		sml:= id+1
 		ig := GetCurrentInning(db,pbk.Sender.ID)
-		if ig<= Maxinning {
-			if sml <= MaxSample {
+		if ig<= constant.MAXINNING {
+			if sml <= constant.MAXSAMPLE {
 				sample := GetSample(db,sml)
 				m := fbbot.NewTextMessage(sample)
 				bot.Send(pbk.Sender,m)
@@ -218,8 +249,8 @@ func (r Record) HandlePostback(bot *fbbot.Bot, pbk *fbbot.Postback)  {
 		id := GetCurrentState(db,pbk.Sender.ID)
 		sml:= id+1
 		ig := GetCurrentInning(db,pbk.Sender.ID)
-		if ig<= Maxinning {
-			if sml <= MaxSample {
+		if ig<= constant.MAXINNING {
+			if sml <= constant.MAXSAMPLE {
 				sample := GetSample(db,sml)
 				m := fbbot.NewTextMessage(sample)
 				bot.Send(pbk.Sender,m)
@@ -235,9 +266,11 @@ func (r Record) HandlePostback(bot *fbbot.Bot, pbk *fbbot.Postback)  {
 	}
 }
 func main() {
+	Init()
+
 	//processing database
 	var err error
-	db, err = sql.Open("mysql", DB_USER+":"+DB_PASS+"@/"+DB_NAME )//"user:password@/dbname"
+	db, err = sql.Open("mysql", mydatabase.USER+":"+mydatabase.PASS+"@/"+mydatabase.NAME )//"user:password@/dbname"
 	fmt.Println("Opening connection")
 	if err != nil {
 		panic(err.Error()) // Just for example purpose. You should use proper error handling instead of panic
@@ -256,7 +289,7 @@ func main() {
 
 
 	var r Record
-	bot := fbbot.New(PORT,VERIFYTOKEN,PAGEACCESSTOKEN)
+	bot := fbbot.New(bot.PORT,bot.VERIFYTOKEN,bot.PAGEACCESSTOKEN)
 	bot.AddMessageHandler(r)
 	bot.AddPostbackHandler(r)
 

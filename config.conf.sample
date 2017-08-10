@@ -1,0 +1,9 @@
+export BOT_PAGEACCESSTOKEN="EAAEo7uCJDOEBACzd7wFzz1xI4pZBgVevkEVUVgzMA5cKJwABbtN1EZCeULeEfzXmenquvfuQoWQjTZCzSDnXaVg4Gj2cBYeDNdAchELPSsuOVn8KdvYtppWeWpu2yUXyTw3uxwilUl7mEmYsZCc7z7vNmRXuefDG0FU1e26qwMLxpP154qlG"
+export BOT_VERIFYTOKEN="neitteiv1234"
+export BOT_PORT=2102
+export DB_NAME="recordchatbotB"
+export DB_USER="root"
+export DB_PASS="1"
+export CONSTANT_MAXSAMPLE=180
+export CONSTANT_MAXINNING=5
+export THUNGHIEM_TN=5
